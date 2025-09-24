@@ -17,19 +17,20 @@ const GenomeSelector = ({ selectedGenome, onSelectGenome }: GenomeSelectorProps)
         const fetchGenomes = async () => {
             try {
                 setIsLoading(true)
+                setError(null)
                 const data = await getAvailableGenomes()
 
-                if (data.genomes && data.genomes['Human']) {
-                    setGenomes(data.genomes['Human'])
+                if (data.genomes?.Human) {
+                    setGenomes(data.genomes.Human)
                 }
-            } catch (error) {
+            } catch (_error) {
                 setError('Failed to load genomes')
             } finally {
                 setIsLoading(false)
             }
         }
 
-        fetchGenomes()
+        void fetchGenomes()
     }, [])
 
     const handleGenomesChange = (value: string) => {
@@ -39,7 +40,7 @@ const GenomeSelector = ({ selectedGenome, onSelectGenome }: GenomeSelectorProps)
     if (error) return <p className="text-red-500">{error}</p>
 
     return (
-        <div >
+        <div>
             <Select
                 value={selectedGenome}
                 onValueChange={handleGenomesChange}
@@ -56,7 +57,7 @@ const GenomeSelector = ({ selectedGenome, onSelectGenome }: GenomeSelectorProps)
                             value={genome.id}
                         >
                             {genome.id} - {genome.name}
-                            {genome.active ? '(active)' : ''}
+                            {genome.active ? ' (active)' : ''}
                         </SelectItem>
                     ))}
                 </SelectContent>

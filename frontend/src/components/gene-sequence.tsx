@@ -2,7 +2,7 @@
 
 import type { GeneBounds, GeneDetailsFromSearch } from "~/lib/type"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
-import { startTransition, useCallback, useEffect, useMemo, useRef, useState, type JSX } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, type JSX } from "react"
 import { Input } from "./ui/input"
 import { Button } from "./ui/button"
 import { getNucleotideColorClass } from "~/utils/color-utils"
@@ -218,7 +218,7 @@ const GeneSequence = (
             const colorizedChars: JSX.Element[] = []
 
             for (let j = 0; j < chunk.length; j++) {
-                const nucleotide = chunk[j] || ''
+                const nucleotide = chunk[j] ?? '' 
                 const nucleotidePosition = lineStartProps + j
                 const color = getNucleotideColorClass(nucleotide)
 
@@ -230,7 +230,7 @@ const GeneSequence = (
                             setHoverPostion(nucleotidePosition)
                             setMousePostion({ x: e.clientX, y: e.clientY })
                         }}
-                        onMouseLeave={(e) => {
+                        onMouseLeave={(_e) => {
                             setHoverPostion(null)
                             setMousePostion(null)
                         }}

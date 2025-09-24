@@ -36,7 +36,7 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
         }: VariantAnalysisProps,
         ref,
     ) => {
-        const [variantPosition, setVariantPosition] = useState<string>(geneBounds?.min?.toString() || '')
+        const [variantPosition, setVariantPosition] = useState<string>(geneBounds?.min?.toString() ?? '') 
         const [variantReference, setVariantReference] = useState('')
         const [variantAlternative, setVariantAlternative] = useState('')
         const [variantResult, setVariantResult] = useState<AnalysisResult | null>(null)
@@ -155,7 +155,7 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
                             className='h-8 cursor-pointer bg-[#3c4f3d] text-xs text-white hover:bg-[#3c4f3d]/90'
                             disabled={isAnalyzing || !variantPosition || !variantAlternative}
                             onClick={() =>
-                                handleVariantSubmit(
+                                void handleVariantSubmit(
                                     variantPosition.replaceAll(',', ''), variantAlternative
                                 )
                             }
@@ -181,11 +181,12 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
                                     parseInt(variantPosition.replaceAll(",", "")),
                             )
                             .map((matchedVariant) => {
-                                const refAltMatch = matchedVariant.title.match(/(\w)>(\w)/)
+                                const refAltRegex = /(\w)>(\w)/
+                                const refAltMatch = refAltRegex.exec(matchedVariant.title)
 
                                 let ref = null
                                 let alt = null
-                                if (refAltMatch && refAltMatch.length === 3) {
+                                if (refAltMatch?.length === 3) {
                                     ref = refAltMatch[1]
                                     alt = refAltMatch[2]
                                 }
@@ -229,7 +230,7 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
                                                     ClinVar Classification
 
                                                     <span className={`ml-1 rounded-sm px-2 py-0.5 ${getClassificationColorClasses(matchedVariant.classification)}`}>
-                                                        {matchedVariant.classification || "Unknown"}
+                                                        {matchedVariant.classification ?? "Unknown"} 
                                                     </span>
                                                 </div>
                                             </div>
@@ -242,7 +243,7 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
                                                     className="h-7 cursor-pointer border-[#3c4f3d]/20 bg-[#e9eeea] text-xs text-[#3c4f3d] hover:bg-[#3c4f3d]/10"
                                                     onClick={() => {
                                                         setVariantAlternative(alt)
-                                                        handleVariantSubmit(
+                                                        void handleVariantSubmit( 
                                                             variantPosition.replaceAll(",", ""),
                                                             alt
                                                         )
@@ -336,5 +337,7 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
             </Card>
         )
     })
+
+VariantAnalysis.displayName = 'VariantAnalysis'
 
 export default VariantAnalysis

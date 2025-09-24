@@ -41,7 +41,7 @@ const SelectHeader = () => {
                         <CardContent className="pb-4">
                             <GenomeSelector
                                 selectedGenome={selectedGenome}
-                                onSelectGenome={setSelectedGenome}
+                                onSelectGenome={handleGenomeChange}
                             />
 
                         </CardContent>
@@ -66,4 +66,4 @@ const SelectHeader = () => {
     )
 }
 
-export default SelectHeader 
+export default SelectHeader

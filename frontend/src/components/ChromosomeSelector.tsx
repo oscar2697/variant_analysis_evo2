@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import type { ChromosomeFromSearch, GeneFromSearch } from "~/lib/type";
 import { getGenomeChromosomes, searchGenes } from "~/utils/genome-api";
@@ -27,7 +27,7 @@ const ChromosomeSelector = (
         onSelectChromosome,
         searchResults,
         setSearchResults,
-        selectedGenes,
+        selectedGenes: _selectedGenes,
         setSelectedGenes
     }: ChromosomeSelectorProps) => {
     const [chromosomes, setChromosomes] = useState<ChromosomeFromSearch[]>([])
@@ -36,51 +36,52 @@ const ChromosomeSelector = (
     const [error, setError] = useState<string | null>(null)
     const [mode, setMode] = useState<Mode>('search')
 
+    const performGeneSearch = useCallback(async (query: string, genome: string, filterFn?: (gene: GeneFromSearch) => boolean) => {
+        try {
+            setIsLoading(true)
+            setError(null)
+
+            const data = await searchGenes(query, genome)
+            const results = filterFn ? data.results.filter(filterFn) : data.results
+
+            setSearchResults(results)
+        } catch (_error) { 
+            setError('Failed to search genes')
+        } finally {
+            setIsLoading(false)
+        }
+    }, [setSearchResults])
+
     useEffect(() => {
         const fetchChromosomes = async () => {
             try {
                 setIsLoading(true)
+                setError(null)
                 const data = await getGenomeChromosomes(selectgenome)
                 setChromosomes(data.chromosomes)
 
                 if (data.chromosomes.length > 0) {
                     onSelectChromosome(data.chromosomes[0]!.name);
                 }
-            } catch (error) {
+            } catch (_error) { 
                 setError('Failed to load genomes')
             } finally {
                 setIsLoading(false)
             }
         }
 
-        fetchChromosomes()
-    }, [selectgenome])
+        void fetchChromosomes() 
+    }, [selectgenome, onSelectChromosome])
 
     useEffect(() => {
-        if (!selectedChromosome || mode != 'browse') return
+        if (!selectedChromosome || mode !== 'browse') return
 
-        performGeneSearch(
+        void performGeneSearch( 
             selectedChromosome,
             selectgenome,
-
             (gene: GeneFromSearch) => gene.chrom === selectedChromosome
         )
-    }, [selectedChromosome, selectgenome, mode])
-
-    const performGeneSearch = async (query: string, genome: string, filterFn?: (gene: GeneFromSearch) => boolean) => {
-        try {
-            setIsLoading(true)
-
-            const data = await searchGenes(query, genome)
-            const results = filterFn ? data.results.filter(filterFn) : data.results
-
-            setSearchResults(results)
-        } catch (error) {
-            setError('Field to Search genes')
-        } finally {
-            setIsLoading(false)
-        }
-    }
+    }, [selectedChromosome, selectgenome, mode, performGeneSearch])
 
     const switchMode = (newMode: Mode) => {
         if (newMode === mode) return
@@ -90,10 +91,9 @@ const ChromosomeSelector = (
         setError(null)
 
         if (newMode === 'browse' && selectedChromosome) {
-            performGeneSearch(
+            void performGeneSearch(
                 selectedChromosome,
                 selectgenome,
-
                 (gene: GeneFromSearch) => gene.chrom === selectedChromosome
             )
         }
@@ -105,13 +105,13 @@ const ChromosomeSelector = (
         if (e) e.preventDefault()
         if (!searchQuery.trim()) return
 
-        performGeneSearch(searchQuery, selectgenome)
+        void performGeneSearch(searchQuery, selectgenome) 
     }
 
     const loadBRCA1Example = () => {
         setMode('search')
         setSearchQuery('BRCA1')
-        performGeneSearch('BRCA1', selectgenome)
+        void performGeneSearch('BRCA1', selectgenome) 
     }
 
     if (error) return <p className="text-red-500">{error}</p>

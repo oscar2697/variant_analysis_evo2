@@ -47,7 +47,7 @@ const GeneViewer = ({ gene, genomeId, onClose }: { gene: GeneFromSearch, genomeI
             if (apiError) {
                 setError(apiError)
             }
-        } catch (error) {
+        } catch (_error) {
             setError('Faild to Load the Sequence Data')
         } finally {
             setIsLoadingSequence(false)
@@ -80,17 +80,17 @@ const GeneViewer = ({ gene, genomeId, onClose }: { gene: GeneFromSearch, genomeI
                     setStartPsition(String(fetchedRange.start))
                     setEndPsition(String(fetchedRange.end))
 
-                    await fetchGeneSequence(fetchedRange.start, fetchedRange.end)
+                    void fetchGeneSequence(fetchedRange.start, fetchedRange.end) 
                 }
-            } catch (error) {
+            } catch (_error) { 
                 setError('Failed to load Gene Informatoin')
             } finally {
                 setIsLoading(false)
             }
         }
 
-        initializeGeneData()
-    }, [gene, genomeId])
+        void initializeGeneData()
+    }, [gene, genomeId, fetchGeneSequence])
 
     const handleSequenceClick = useCallback(
         (position: number, nucleotide: string) => {
@@ -135,10 +135,10 @@ const GeneViewer = ({ gene, genomeId, onClose }: { gene: GeneFromSearch, genomeI
         }
 
         setError(null)
-        fetchGeneSequence(start, end)
+        void fetchGeneSequence(start, end) 
     }, [startPosition, endPosition, fetchGeneSequence, geneBounds])
 
-    const fetchClinvar = async () => {
+    const fetchClinvar = useCallback(async () => {
         if (!gene.chrom || !geneBounds) return
 
         setIsLoadingClinvarVariants(true)
@@ -152,19 +152,19 @@ const GeneViewer = ({ gene, genomeId, onClose }: { gene: GeneFromSearch, genomeI
             )
 
             setClinvarVariants(variants)
-        } catch (error) {
+        } catch (_error) { 
             setClinvarError('Something Happen to Fetch the ClinVar Variants')
             setClinvarVariants([])
         } finally {
             setIsLoadingClinvarVariants(false)
         }
-    }
+    }, [gene.chrom, geneBounds, genomeId]) 
 
     useEffect(() => {
         if (geneBounds) {
-            fetchClinvar()
+            void fetchClinvar() 
         }
-    }, [geneBounds])
+    }, [geneBounds, fetchClinvar]) 
 
     const showComparisonVariant = (variant: ClinvarVariant) => {
         if (variant.evo2Result) {

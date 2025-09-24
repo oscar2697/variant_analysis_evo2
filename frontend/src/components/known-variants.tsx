@@ -33,9 +33,10 @@ const KnownVariants = ({
             ? parseInt(variant.location.replaceAll(",", ""))
             : null
 
-        const refAltMatch = variant.title.match(/(\w)>(\w)/)
+        const refAltRegex = /(\w)>(\w)/
+        const refAltMatch = refAltRegex.exec(variant.title)
 
-        if (refAltMatch && refAltMatch.length === 3) {
+        if (refAltMatch?.length === 3) {
             variantDetails = {
                 position,
                 reference: refAltMatch[1],
