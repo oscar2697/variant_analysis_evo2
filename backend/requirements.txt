@@ -1,0 +1,9 @@
+matplotlib 
+pandas 
+seaborn 
+scikit-learn 
+openpyxl
+torch
+transformers
+fastapi
+uvicorn
