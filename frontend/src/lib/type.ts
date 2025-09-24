@@ -51,7 +51,7 @@ export interface ClinvarVariant {
         classification_confidence: number
     }
     isAnalyzing?: boolean
-    evo2Error: string
+    evo2Error: string | null
 }
 
 export interface AnalysisResult {
