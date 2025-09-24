@@ -283,7 +283,8 @@ export async function fetchClinvarVariants(chrom: string, geneBound: GeneBounds,
                 classification: variant.germline_classification.description || 'Unknown',
                 gene_sort: variant.gene_sort || '',
                 chromosome: chromFormatted,
-                location: variant.location_sort ? parseInt(variant.location_sort).toLocaleString() : 'Unknown'
+                location: variant.location_sort ? parseInt(variant.location_sort).toLocaleString() : 'Unknown',
+                evo2Error: variant.evo2Error || null 
             })
         }
     }
