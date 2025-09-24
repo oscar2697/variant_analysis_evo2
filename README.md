@@ -72,8 +72,10 @@ alternate_allele = "G"        # Alternate base
     "delta_score": 0.87,        # Confidence score
     "confidence": 0.92          # Model confidence
 }
+
 ```
 ## Project Structure
+```
 variant-analysis-evo2/
 ├── backend/               # Python backend
 │   ├── evo2/             # Evo2 model implementation
@@ -87,6 +89,7 @@ variant-analysis-evo2/
     │   ├── lib/          # Utility functions
     │   └── styles/       # Global styles
     └── package.json      # Frontend dependencies
+```
 
 ## Key Features
 ### 1. Genomic Data Visualization
