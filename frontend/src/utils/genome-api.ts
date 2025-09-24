@@ -1,6 +1,57 @@
 import { env } from "~/env"
 import type { AnalysisResult, ChromosomeFromSearch, ClinvarVariant, GeneBounds, GeneDetailsFromSearch, GeneFromSearch, GenomeAssemblyFromSearch } from "~/lib/type"
 
+// Tipos para las respuestas de la API
+interface UCSCGenomeResponse {
+    ucscGenomes: Record<string, {
+        organism?: string;
+        description?: string;
+        sourceName?: string;
+        active?: boolean;
+    }>;
+}
+
+interface UCSCChromosomeResponse {
+    chromosomes: Record<string, number>;
+}
+
+interface NCBIGeneResponse {
+    [0]: number; // total count
+    [1]: unknown; // unused
+    [2]: { GeneID?: string[] }; // field map
+    [3]: string[][]; // results array
+}
+
+interface NCBIGeneDetailsResponse {
+    result?: Record<string, GeneDetailsFromSearch>;
+}
+
+interface UCSCSequenceResponse {
+    dna?: string;
+    error?: string;
+}
+
+interface ClinvarSearchResponse {
+    esearchresult?: {
+        idlist?: string[];
+    };
+}
+
+interface ClinvarSummaryResponse {
+    result?: {
+        uids?: string[];
+    } & Record<string, {
+        title?: string;
+        obj_type?: string;
+        germline_classification?: {
+            description?: string;
+        };
+        gene_sort?: string;
+        location_sort?: string;
+        evo2Error?: string | null;
+    }>;
+}
+
 export async function getAvailableGenomes() {
     const apiUrl = "https://api.genome.ucsc.edu/list/ucscGenomes"
     const response = await fetch(apiUrl)
@@ -9,7 +60,7 @@ export async function getAvailableGenomes() {
         throw new Error("Failed to fetch genome list from UCSC API")
     }
 
-    const genomeData = await response.json()
+    const genomeData = await response.json() as UCSCGenomeResponse
 
     if (!genomeData.ucscGenomes) {
         throw new Error("UCSC API error: missing ucscGenomes")
@@ -20,13 +71,15 @@ export async function getAvailableGenomes() {
 
     for (const genomeId in genomes) {
         const genomeInfo = genomes[genomeId]
-        const organism = genomeInfo.organism || "Other"
+        if (!genomeInfo) continue
+
+        const organism = genomeInfo.organism ?? "Other"
 
         if (!structuredGenomes[organism]) structuredGenomes[organism] = []
-        structuredGenomes[organism].push({
+        structuredGenomes[organism]!.push({
             id: genomeId,
-            name: genomeInfo.description || genomeId,
-            sourceName: genomeInfo.sourceName || genomeId,
+            name: genomeInfo.description ?? genomeId,
+            sourceName: genomeInfo.sourceName ?? genomeId,
             active: !!genomeInfo.active,
         })
     }
@@ -42,7 +95,7 @@ export async function getGenomeChromosomes(genomeId: string) {
         throw new Error("Failed to fetch chromosome list from UCSC API")
     }
 
-    const chromosomeData = await response.json()
+    const chromosomeData = await response.json() as UCSCChromosomeResponse
     if (!chromosomeData.chromosomes) {
         throw new Error("UCSC API error: missing chromosomes")
     }
@@ -56,9 +109,13 @@ export async function getGenomeChromosomes(genomeId: string) {
             chromId.includes("random")
         )
             continue
+        
+        const size = chromosomeData.chromosomes[chromId]
+        if (size === undefined) continue
+
         chromosomes.push({
             name: chromId,
-            size: chromosomeData.chromosomes[chromId],
+            size,
         })
     }
 
@@ -91,29 +148,30 @@ export async function searchGenes(query: string, genome: string) {
         throw new Error("NCBI API Error")
     }
 
-    const data = await response.json()
+    const data = await response.json() as NCBIGeneResponse
     const results: GeneFromSearch[] = []
 
-    if (data[0] > 0) {
+    if (data[0] > 0 && data[3]) {
         const fieldMap = data[2]
-        const geneIds = fieldMap.GeneID || []
+        const geneIds = fieldMap?.GeneID ?? []
 
         for (let i = 0; i < Math.min(10, data[0]); ++i) {
             if (i < data[3].length) {
                 try {
                     const display = data[3][i]
-                    let chrom = display[0]
+                    if (!display) continue
 
-                    if (chrom && !chrom.startsWith("chr")) {
+                    let chrom = display[0]
+                    if (chrom && typeof chrom === 'string' && !chrom.startsWith("chr")) {
                         chrom = `chr${chrom}`
                     }
 
                     results.push({
-                        symbol: display[2],
-                        name: display[3],
-                        chrom,
-                        description: display[3],
-                        gene_id: geneIds[i] || "",
+                        symbol: display[2] ?? '',
+                        name: display[3] ?? '',
+                        chrom: chrom ?? '',
+                        description: display[3] ?? '',
+                        gene_id: geneIds[i] ?? "",
                     })
                 } catch {
                     continue
@@ -141,13 +199,14 @@ export async function fetchGeneDetails(geneId: string): Promise<{
             return { geneDetails: null, geneBounds: null, initialRange: null }
         }
 
-        const detailData = await detailsResponse.json()
+        const detailData = await detailsResponse.json() as NCBIGeneDetailsResponse
 
-        if (detailData.result && detailData.result[geneId]) {
-            const detail = detailData.result[geneId]
+        if (detailData.result?.[geneId]) {
+            const detail = detailData.result[geneId]!
 
             if (detail.genomicinfo && detail.genomicinfo.length > 0) {
                 const info = detail.genomicinfo[0]
+                if (!info) return { geneDetails: detail, geneBounds: null, initialRange: null }
 
                 const minPos = Math.min(info.chrstart, info.chrstop)
                 const maxPos = Math.max(info.chrstart, info.chrstop)
@@ -163,7 +222,7 @@ export async function fetchGeneDetails(geneId: string): Promise<{
         }
 
         return { geneDetails: null, geneBounds: null, initialRange: null }
-    } catch (err) {
+    } catch {
         return { geneDetails: null, geneBounds: null, initialRange: null }
     }
 }
@@ -186,7 +245,7 @@ export async function fetchGeneSequence(
 
         const apiUrl = `https://api.genome.ucsc.edu/getData/sequence?genome=${genomeId};chrom=${chromosome};start=${apiStart};end=${apiEnd}`
         const response = await fetch(apiUrl)
-        const data = await response.json()
+        const data = await response.json() as UCSCSequenceResponse
 
         const actualRange = { start, end }
 
@@ -197,7 +256,7 @@ export async function fetchGeneSequence(
         const sequence = data.dna.toUpperCase()
 
         return { sequence, actualRange }
-    } catch (err) {
+    } catch {
         return {
             sequence: "",
             actualRange: { start, end },
@@ -219,8 +278,7 @@ export async function fetchClinvarVariants(
     const positionField = genomeId === "hg19" ? "chrpos37" : "chrpos38"
     const searchTerm = `${chromFormatted}[chromosome] AND ${minBound}:${maxBound}[${positionField}]`
 
-    const searchUrl =
-        "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+    const searchUrl = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
     const searchParams = new URLSearchParams({
         db: "clinvar",
         term: searchTerm,
@@ -234,60 +292,52 @@ export async function fetchClinvarVariants(
         throw new Error("ClinVar search failed: " + searchResponse.statusText)
     }
 
-    const searchData = await searchResponse.json()
+    const searchData = await searchResponse.json() as ClinvarSearchResponse
 
-    if (
-        !searchData.esearchresult ||
-        !searchData.esearchresult.idlist ||
-        searchData.esearchresult.idlist.length === 0
-    ) {
+    if (!searchData.esearchresult?.idlist || searchData.esearchresult.idlist.length === 0) {
         console.log("No ClinVar variants found")
         return []
     }
 
     const variantIds = searchData.esearchresult.idlist
 
-    const summaryUrl =
-        "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
+    const summaryUrl = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
     const summaryParams = new URLSearchParams({
         db: "clinvar",
         id: variantIds.join(","),
         retmode: "json",
     })
 
-    const summaryResponse = await fetch(
-        `${summaryUrl}?${summaryParams.toString()}`,
-    )
+    const summaryResponse = await fetch(`${summaryUrl}?${summaryParams.toString()}`)
 
     if (!summaryResponse.ok) {
-        throw new Error(
-            "Failed to fetch variant details: " + summaryResponse.statusText,
-        )
+        throw new Error("Failed to fetch variant details: " + summaryResponse.statusText)
     }
 
-    const summaryData = await summaryResponse.json()
+    const summaryData = await summaryResponse.json() as ClinvarSummaryResponse
     const variants: ClinvarVariant[] = []
 
-    if (summaryData.result && summaryData.result.uids) {
+    if (summaryData.result?.uids) {
         for (const id of summaryData.result.uids) {
             const variant = summaryData.result[id]
+            if (!variant) continue
             
             variants.push({
                 clinvar_id: id,
-                title: variant.title,
-                variation_type: (variant.obj_type || "Unknown")
+                title: variant.title ?? "",
+                variation_type: ((variant.obj_type ?? "Unknown")
                     .split(" ")
-                    .map(
-                        (word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                    .map((word: string) => 
+                        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
                     )
-                    .join(" "),
-                classification: variant.germline_classification.description || "Unknown",
-                gene_sort: variant.gene_sort || "",
+                    .join(" ")),
+                classification: variant.germline_classification?.description ?? "Unknown",
+                gene_sort: variant.gene_sort ?? "",
                 chromosome: chromFormatted,
                 location: variant.location_sort
                     ? parseInt(variant.location_sort).toLocaleString()
                     : "Unknown",
-                evo2Error: null
+                evo2Error: variant.evo2Error ?? null
             })
         }
     }
@@ -321,5 +371,6 @@ export async function analyzeVariantWithAPI({
         throw new Error("Failed to analyze variant " + errorText)
     }
 
-    return await response.json()
+    const result = await response.json() as AnalysisResult
+    return result
 }
