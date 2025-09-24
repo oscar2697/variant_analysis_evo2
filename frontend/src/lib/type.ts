@@ -62,3 +62,53 @@ export interface AnalysisResult {
     prediction: string;
     classification_confidence: number;
 }
+
+export interface UCSCGenomeResponse {
+    ucscGenomes: Record<string, {
+        organism?: string
+        description?: string
+        sourceName?: string
+        active?: boolean
+    }>
+}
+
+export interface UCSCChromosomeResponse {
+    chromosomes: Record<string, number>
+}
+
+export interface NCBIGeneResponse {
+    [0]: number 
+    [1]: unknown
+    [2]: { GeneID?: string[] } 
+    [3]: string[][] 
+}
+
+export interface NCBIGeneDetailsResponse {
+    result?: Record<string, GeneDetailsFromSearch>
+}
+
+export interface UCSCSequenceResponse {
+    dna?: string
+    error?: string
+}
+
+export interface ClinvarSearchResponse {
+    esearchresult?: {
+        idlist?: string[]
+    }
+}
+
+export interface ClinvarSummaryResponse {
+    result?: {
+        uids?: string[]
+    } & Record<string, {
+        title?: string
+        obj_type?: string
+        germline_classification?: {
+            description?: string
+        }
+        gene_sort?: string
+        location_sort?: string
+        evo2Error?: string | null
+    }>
+}

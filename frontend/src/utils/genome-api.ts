@@ -1,56 +1,5 @@
 import { env } from "~/env"
-import type { AnalysisResult, ChromosomeFromSearch, ClinvarVariant, GeneBounds, GeneDetailsFromSearch, GeneFromSearch, GenomeAssemblyFromSearch } from "~/lib/type"
-
-// Tipos para las respuestas de la API
-interface UCSCGenomeResponse {
-    ucscGenomes: Record<string, {
-        organism?: string;
-        description?: string;
-        sourceName?: string;
-        active?: boolean;
-    }>;
-}
-
-interface UCSCChromosomeResponse {
-    chromosomes: Record<string, number>;
-}
-
-interface NCBIGeneResponse {
-    [0]: number; // total count
-    [1]: unknown; // unused
-    [2]: { GeneID?: string[] }; // field map
-    [3]: string[][]; // results array
-}
-
-interface NCBIGeneDetailsResponse {
-    result?: Record<string, GeneDetailsFromSearch>;
-}
-
-interface UCSCSequenceResponse {
-    dna?: string;
-    error?: string;
-}
-
-interface ClinvarSearchResponse {
-    esearchresult?: {
-        idlist?: string[];
-    };
-}
-
-interface ClinvarSummaryResponse {
-    result?: {
-        uids?: string[];
-    } & Record<string, {
-        title?: string;
-        obj_type?: string;
-        germline_classification?: {
-            description?: string;
-        };
-        gene_sort?: string;
-        location_sort?: string;
-        evo2Error?: string | null;
-    }>;
-}
+import type { AnalysisResult, ChromosomeFromSearch, ClinvarSearchResponse, ClinvarSummaryResponse, ClinvarVariant, GeneBounds, GeneDetailsFromSearch, GeneFromSearch, GenomeAssemblyFromSearch, NCBIGeneDetailsResponse, NCBIGeneResponse, UCSCChromosomeResponse, UCSCGenomeResponse, UCSCSequenceResponse } from "~/lib/type"
 
 export async function getAvailableGenomes() {
     const apiUrl = "https://api.genome.ucsc.edu/list/ucscGenomes"

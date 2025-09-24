@@ -47,8 +47,8 @@ const GeneViewer = ({ gene, genomeId, onClose }: { gene: GeneFromSearch, genomeI
             if (apiError) {
                 setError(apiError)
             }
-        } catch { // ← Corregido: eliminar _error
-            setError('Failed to Load the Sequence Data') // ← También corregí "Faild" a "Failed"
+        } catch { 
+            setError('Failed to Load the Sequence Data') 
         } finally {
             setIsLoadingSequence(false)
         }
@@ -82,8 +82,8 @@ const GeneViewer = ({ gene, genomeId, onClose }: { gene: GeneFromSearch, genomeI
 
                     void fetchGeneSequence(fetchedRange.start, fetchedRange.end) 
                 }
-            } catch { // ← Corregido: eliminar _error
-                setError('Failed to load Gene Information') // ← También corregí "Informatoin" a "Information"
+            } catch { 
+                setError('Failed to load Gene Information') 
             } finally {
                 setIsLoading(false)
             }
@@ -152,8 +152,8 @@ const GeneViewer = ({ gene, genomeId, onClose }: { gene: GeneFromSearch, genomeI
             )
 
             setClinvarVariants(variants)
-        } catch { // ← Corregido: eliminar _error
-            setClinvarError('Something Happened while Fetching the ClinVar Variants') // ← Mensaje mejorado
+        } catch { 
+            setClinvarError('Something Happened while Fetching the ClinVar Variants') 
             setClinvarVariants([])
         } finally {
             setIsLoadingClinvarVariants(false)

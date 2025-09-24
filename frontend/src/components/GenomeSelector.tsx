@@ -23,7 +23,7 @@ const GenomeSelector = ({ selectedGenome, onSelectGenome }: GenomeSelectorProps)
                 if (data.genomes?.Human) {
                     setGenomes(data.genomes.Human)
                 }
-            } catch {  // ← Eliminar _error aquí
+            } catch { 
                 setError('Failed to load genomes')
             } finally {
                 setIsLoading(false)
