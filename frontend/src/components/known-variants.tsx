@@ -44,12 +44,7 @@ const KnownVariants = ({
             }
         }
 
-        if (
-            !variantDetails ||
-            !variantDetails.position ||
-            !variantDetails.reference ||
-            !variantDetails.alternative
-        ) {
+        if (!variantDetails?.position || !variantDetails?.reference || !variantDetails?.alternative) {
             return
         }
 

@@ -45,7 +45,7 @@ const ChromosomeSelector = (
             const results = filterFn ? data.results.filter(filterFn) : data.results
 
             setSearchResults(results)
-        } catch (_error) { 
+        } catch {
             setError('Failed to search genes')
         } finally {
             setIsLoading(false)
@@ -63,20 +63,20 @@ const ChromosomeSelector = (
                 if (data.chromosomes.length > 0) {
                     onSelectChromosome(data.chromosomes[0]!.name);
                 }
-            } catch (_error) { 
+            } catch {
                 setError('Failed to load genomes')
             } finally {
                 setIsLoading(false)
             }
         }
 
-        void fetchChromosomes() 
+        void fetchChromosomes()
     }, [selectgenome, onSelectChromosome])
 
     useEffect(() => {
         if (!selectedChromosome || mode !== 'browse') return
 
-        void performGeneSearch( 
+        void performGeneSearch(
             selectedChromosome,
             selectgenome,
             (gene: GeneFromSearch) => gene.chrom === selectedChromosome
@@ -105,13 +105,13 @@ const ChromosomeSelector = (
         if (e) e.preventDefault()
         if (!searchQuery.trim()) return
 
-        void performGeneSearch(searchQuery, selectgenome) 
+        void performGeneSearch(searchQuery, selectgenome)
     }
 
     const loadBRCA1Example = () => {
         setMode('search')
         setSearchQuery('BRCA1')
-        void performGeneSearch('BRCA1', selectgenome) 
+        void performGeneSearch('BRCA1', selectgenome)
     }
 
     if (error) return <p className="text-red-500">{error}</p>
